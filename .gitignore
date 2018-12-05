@@ -24,3 +24,4 @@ yarn-error.log*
 /src/**/*.css
 
 .vs/
+/server/config/dev.js
