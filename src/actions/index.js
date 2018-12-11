@@ -7,7 +7,9 @@ import {
     FETCH_RENTALS_SUCCESS,
     LOGIN_SUCCESS,
     LOGIN_FAILURE,
-    LOGOUT
+    LOGOUT,
+    FETCH_RENTALS_INIT,
+    FETCH_RENTALS_FAIL
 } from './types';
 
 const axiosInstance = axiosService.getInstance();
@@ -32,13 +34,30 @@ const fetchRentalsSuccess = (rentals) => {
     }
 }
 
+const fetchRentalsInit = () => {
+    return {
+        type: FETCH_RENTALS_INIT
+    }
+}
+
+const fetchRentalsFail = (errors) => {
+    return {
+        type: FETCH_RENTALS_FAIL,
+        errors
+    }
+}
+
 //3 -1. action que devuelve las rentals. carga la data
-export const fetchRentals = () => {
+export const fetchRentals = (city) => {
+    const url = city ? `/api/v1/rentals?city=${city}` : '/api/v1/rentals';
+
     return dispatch => {
-        axiosInstance.get('/api/v1/rentals')
+        dispatch(fetchRentalsInit());
+
+        axiosInstance.get(url)
             .then(res => res.data)
-            .then(rentals => dispatch(fetchRentalsSuccess(rentals))
-            );
+            .then(rentals => dispatch(fetchRentalsSuccess(rentals)))
+            .catch(({ response }) => dispatch(fetchRentalsFail(response.data.errors)))
     }
 }
 
@@ -53,6 +72,17 @@ export const fetchRentalById = (rentalId) => {
     }
 }
 
+export const createRental = (rentalData) => {
+    return axiosInstance.post('/api/v1/rentals', rentalData).then(
+        (res) => {
+            return res.data;
+        },
+        (err) => {
+            return Promise.reject(err.response.data.errors);
+        }
+    )
+}
+
 export const register = (userData) => {
     return axios.post('api/v1/users/register', userData).then(
         (res) => {
@@ -65,8 +95,10 @@ export const register = (userData) => {
 }
 
 const loginSuccess = () => {
+    const username = authService.getUsername();
     return {
-        type: LOGIN_SUCCESS
+        type: LOGIN_SUCCESS,
+        username
     }
 }
 
