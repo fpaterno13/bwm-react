@@ -9,7 +9,10 @@ import {
     LOGIN_FAILURE,
     LOGOUT,
     FETCH_RENTALS_INIT,
-    FETCH_RENTALS_FAIL
+    FETCH_RENTALS_FAIL,
+    FETCH_USER_BOOKINGS_FAIL,
+    FETCH_USER_BOOKINGS_SUCCESS,
+    FETCH_USER_BOOKINGS_INIT
 } from './types';
 
 const axiosInstance = axiosService.getInstance();
@@ -94,6 +97,37 @@ export const register = (userData) => {
     )
 }
 
+const fetchUserBookingsInit = () => {
+    return {
+        type: FETCH_USER_BOOKINGS_INIT
+    }
+}
+
+const fetchUserBookingsSuccess = (userBookings) => {
+    return {
+        type: FETCH_USER_BOOKINGS_SUCCESS,
+        userBookings
+    }
+}
+
+const fetchUserBookingsFail = (errors) => {
+    return {
+        type: FETCH_USER_BOOKINGS_FAIL,
+        errors
+    }
+}
+
+export const fetchUserBookings = () => {
+    return dispatch => {
+        dispatch(fetchUserBookingsInit());
+
+        axiosInstance.get('/api/v1/bookings/manage')
+            .then(res => res.data)
+            .then(userBookings => dispatch(fetchUserBookingsSuccess(userBookings)))
+            .catch(({ response }) => dispatch(fetchUserBookingsFail(response.data.errors)))
+    }
+}
+
 const loginSuccess = () => {
     const username = authService.getUsername();
     return {
@@ -143,4 +177,21 @@ export const createBooking = (booking) => {
     return axiosInstance.post('/api/v1/bookings', booking)
         .then(res => res.data)
         .catch(({ response }) => Promise.reject(response.data.errors));
+}
+
+export const getUserRentals = () => {
+    return axiosInstance.get('/api/v1/rentals/manage').then(
+        (res) => {
+            return res.data;
+        },
+        (err) => {
+            return Promise.reject(err.response.data.errors);
+        }
+    )
+}
+
+export const deleteRental = (rentalId) => {
+    return axiosInstance.delete(`/api/v1/rentals/${rentalId}`).then(
+            res => res.data,
+            err => Promise.reject(err.response.data.errors))
 }
